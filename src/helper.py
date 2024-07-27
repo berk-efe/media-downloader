@@ -1,15 +1,18 @@
-import yt_dlp
+import subprocess
 import threading
+import yt_dlp
+import queue
+
 
 class YoutubeManager:
     def __init__(self):
         self.ydl = yt_dlp.YoutubeDL({
-            "postprocessors": [{"key": "FFmpegVideoConvertor"}]
+            "postprocessors": [{"key": "FFmpegVideoConvertor"}],
         })
 
 
     # GET DATA BY URL
-    def get_data_by_url(self, url, callback):        
+    def get_data_by_url(self, url, callback, loq_queue):        
         def run():
             data = self.ydl.extract_info(url, download=False)
             title = data.get("title", None)
@@ -28,7 +31,8 @@ class YoutubeManager:
                 simplyfied_format = {
                     'ext': format.get('ext', None),
                     'fps': format.get('fps', None),
-                    'resolution': format.get('resolution', None),                
+                    'resolution': format.get('resolution', None), 
+                    'id': format.get('format_id', None),             
                 }
                 formats.append(simplyfied_format)
                 
@@ -46,6 +50,15 @@ class YoutubeManager:
             }
             
             callback(result)
+        
+        thread = threading.Thread(target=run)
+        thread.start()
+        
+    # DOWNLOAD VIDEO BY ID
+    def download_video_by_id(self, id, output_path):
+        def run():
+            print("Downloading...")
+            
         
         thread = threading.Thread(target=run)
         thread.start()
