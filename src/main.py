@@ -19,17 +19,18 @@ class App(CTk):
 
         # CONFIGURE WINDOW
         self.title("Media Downloader")
-        self.geometry(f"{600}x{480}")
+        self.geometry(f"{1280}x{720}")
         
         # CONFIGURE GRID
-        self.grid_columnconfigure(0, weight=1)
+        self.grid_columnconfigure(0, weight=0)
+        self.grid_columnconfigure(1, weight=1)
         self.grid_rowconfigure(0, weight=0)
         self.grid_rowconfigure(1, weight=1)
         self.grid_rowconfigure(2, weight=0)
         
         # CREATE INPUT FRAME
         self.input_frame = CTkFrame(self)
-        self.input_frame.grid(row=0, column=0, sticky="ew", padx=10, pady=10)
+        self.input_frame.grid(row=0, column=1, sticky="ew", padx=10, pady=10)
 
         self.input_frame.grid_columnconfigure(0, weight=1)
         self.input_frame.grid_columnconfigure(1, weight=0)
@@ -45,15 +46,16 @@ class App(CTk):
         
         # OUTPUT FRAME
         self.output_frame = CTkFrame(self)
-        self.output_frame.grid(row=1, column=0, sticky="nsew", padx=10, pady=10)
+        self.output_frame.grid(row=1, column=1, sticky="nsew", padx=10, pady=10)
         
         self.output_frame.grid_columnconfigure(0, weight=1)
         self.output_frame.grid_rowconfigure(0, weight=1)
         self.output_frame.grid_rowconfigure(1, weight=0)
+        self.output_frame.grid_rowconfigure(2, weight=0)
         
         # STATUS BAR
         self.status_bar_frame = CTkFrame(self, corner_radius=0)
-        self.status_bar_frame.grid(row=2, column=0, sticky="ew")
+        self.status_bar_frame.grid(row=2, column=0, sticky="ew", columnspan=2)
         
         # STATUS BAR WIDGETS
         self.status_label = CTkLabel(self.status_bar_frame, text="Ready", anchor=tkinter.W)
@@ -94,10 +96,12 @@ class App(CTk):
         for widget in self.output_frame.winfo_children():
             widget.destroy()
         
+        # LABLE
         self.video_title_lable = CTkTextbox(self.output_frame, height=1)
         self.video_title_lable.insert(tkinter.END, text=data.get('title', 'No Title'))
         self.video_title_lable.grid(row=0, column=0, sticky="ew", padx=10, pady=10)
         
+        # FORMAT_FRAME
         self.select_video_format_frame = CTkFrame(self.output_frame)
         self.select_video_format_frame.grid(row=1, column=0, sticky="ew", padx=10, pady=10)
         
@@ -105,13 +109,27 @@ class App(CTk):
         self.select_video_format_frame.grid_columnconfigure(1, weight=0)
         self.select_video_format_frame.grid_rowconfigure(0, weight=1)
         
+        # FORMAT_FRAME WIDGETS
         self.video_formats_combobox = CTkComboBox(self.select_video_format_frame, values=[f"{format.get('resolution')}, {format.get('ext')}, {format.get('fps')}fps, {format.get('id')}" for format in data.get('formats', [])])
         self.video_formats_combobox.grid(row=0, column=0, sticky="ew", padx=10, pady=10)
         
         self.video_download_button = CTkButton(self.select_video_format_frame, text="Download", command=self.download_video)
         self.video_download_button.grid(row=0, column=1, sticky="ew", padx=10, pady=10)
         
+        # DOWNLOAD PROGRESS BAR
+        test_var = tkinter.Variable(value=0.1)
+        self.video_download_progress_bar = CTkProgressBar(self.output_frame, variable=test_var)
+        self.video_download_progress_bar.grid(row=2, column=0, sticky="ew", padx=10, pady=10)
+        
         return data
+    
+    def on_video_download(self):
+        
+        # DOWNLOAD PROGRESS BAR
+        test_var = tkinter.Variable(value=0.1)
+        self.video_download_progress_bar = CTkProgressBar(self.output_frame, variable=test_var)
+        self.video_download_progress_bar.grid(row=2, column=0, sticky="ew", padx=10, pady=10)
+        
 
 
 

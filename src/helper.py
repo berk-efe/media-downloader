@@ -14,6 +14,8 @@ class YoutubeManager:
     # GET DATA BY URL
     def get_data_by_url(self, url, callback, loq_queue):        
         def run():
+            loq_queue.put("Getting data. . .")
+            
             data = self.ydl.extract_info(url, download=False)
             title = data.get("title", None)
             
@@ -50,6 +52,8 @@ class YoutubeManager:
             }
             
             callback(result)
+            
+            loq_queue.put("Data received.")
         
         thread = threading.Thread(target=run)
         thread.start()
