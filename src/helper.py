@@ -3,11 +3,34 @@ import threading
 import yt_dlp
 import queue
 
+class MyLogger:
+    def debug(self, msg):
+        # For compatibility with youtube-dl, both debug and info are passed into debug
+        # You can distinguish them by the prefix '[debug] '
+        if msg.startswith('[debug] '):
+            pass
+        else:
+            self.info(msg)
+
+    def info(self, msg):
+        pass
+
+    def warning(self, msg):
+        pass
+
+    def error(self, msg):
+        print(msg)
+
+def my_hook(d):
+    if d['status'] == 'finished':
+        print('Done downloading, now post-processing ...')
 
 class YoutubeManager:
     def __init__(self):
         self.ydl = yt_dlp.YoutubeDL({
             "postprocessors": [{"key": "FFmpegVideoConvertor"}],
+            "logger": MyLogger(),
+            "progress_hooks": [my_hook],
         })
 
 
@@ -59,10 +82,17 @@ class YoutubeManager:
         thread.start()
         
     # DOWNLOAD VIDEO BY ID
-    def download_video_by_id(self, id, output_path):
+    def download_video_by_id(self, id, url, output_path, loq_queue):
         def run():
-            print("Downloading...")
+            loq_queue.put("Downloading started.")
+            command = ["yt-dlp", "-f", id, url, "-o", output_path]
+            result = subprocess.run(command, capture_output=True, text=True)
+            loq_queue.put("command ran")
             
+            if result.returncode == 0:
+                loq_queue.put("[Success] Download completed successfully!")
+            else:
+                loq_queue.put(f"[Error] Error: {result.stderr}")
         
         thread = threading.Thread(target=run)
         thread.start()

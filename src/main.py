@@ -85,10 +85,12 @@ class App(CTk):
         extension = desired_format.split(",")[1].strip()
         video_title = self.video_title_lable.get("1.0", tkinter.END).strip()
         
+        video_url = self.url_entry.get()
+        
         video_id = desired_format.split(",")[-1].strip()
         output_path = tkinter.filedialog.asksaveasfilename(initialfile=video_title, defaultextension=f".{extension}", filetypes=[("MP4 Files", "*.mp4"), ("WEBP Files", "*.webp"), ("WEBM Files", "*.webm")])
         
-        ym.download_video_by_id(video_id, output_path)
+        ym.download_video_by_id(video_id, video_url, output_path, self.log_queue)
         
         
     # CALLBACK
