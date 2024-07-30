@@ -19,7 +19,7 @@ class App(CTk):
 
         # CONFIGURE WINDOW
         self.title("Media Downloader")
-        self.geometry(f"{1280}x{720}")
+        self.geometry(f"{1000}x{720}")
         
         # CONFIGURE GRID
         self.grid_columnconfigure(0, weight=0)
@@ -112,9 +112,11 @@ class App(CTk):
         self.select_video_format_frame.grid_rowconfigure(0, weight=1)
         
         # FORMAT_FRAME WIDGETS
-        self.video_formats_combobox = CTkComboBox(self.select_video_format_frame, values=[f"{format.get('resolution')}, {format.get('ext')}, {format.get('fps')}fps, {format.get('id')}" for format in data.get('formats', [])])
+        values = [f"{format.get('resolution')}, {format.get('ext')}, {format.get('fps')}fps, {format.get('id')}" for format in data.get('formats', [])]
+        self.video_formats_combobox = CTkComboBox(self.select_video_format_frame, values=values, state="readonly")
         self.video_formats_combobox.grid(row=0, column=0, sticky="ew", padx=10, pady=10)
-        
+        self.video_formats_combobox.set(values[-1])
+
         self.video_download_button = CTkButton(self.select_video_format_frame, text="Download", command=self.download_video)
         self.video_download_button.grid(row=0, column=1, sticky="ew", padx=10, pady=10)
         

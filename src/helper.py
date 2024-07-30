@@ -1,7 +1,8 @@
-import subprocess
+import logging
 import threading
 import yt_dlp
 import queue
+from datetime import timedelta
 
 class MyLogger:
     def debug(self, msg):
@@ -34,10 +35,32 @@ class YoutubeManager:
         })
 
 
+    def format_bytes(self, bytes):
+        if bytes >= 1024*1024:  # 1 MB
+            return f"{bytes / 1024*1024:.2f} MB"
+        elif bytes >= 1024:  # 1 KB
+            return f"{bytes / 1024:.2f} KB"
+        else:
+            return f"{bytes} bytes"
+
+    def format_speed(self, speed):
+        if speed >= 1024*1024:  # 1 MB
+            return f"{speed / 1024*1024:.2f} MB/s"
+        elif speed >= 1024:  # 1 KB
+            return f"{speed / 1024:.2f} KB/s"
+        else:
+            return f"{speed} bytes/s"
+
+    def format_time(self, seconds):
+        delta = timedelta(seconds=seconds)
+        hours, remainder = divmod(delta.seconds, 60 * 60)
+        minutes, seconds = divmod(remainder, 60)
+        return f"{hours:02}:{minutes:02}:{seconds:02}"
+
     # GET DATA BY URL
-    def get_data_by_url(self, url, callback, loq_queue):        
+    def get_data_by_url(self, url, callback, log_queue):        
         def run():
-            loq_queue.put("Getting data. . .")
+            log_queue.put("Getting data. . .")
             
             data = self.ydl.extract_info(url, download=False)
             title = data.get("title", None)
@@ -76,23 +99,56 @@ class YoutubeManager:
             
             callback(result)
             
-            loq_queue.put("Data received.")
+            log_queue.put("Data received.")
         
         thread = threading.Thread(target=run)
         thread.start()
         
     # DOWNLOAD VIDEO BY ID
-    def download_video_by_id(self, id, url, output_path, loq_queue):
+    def download_video_by_id(self, id, url, output_path, log_queue):
         def run():
-            loq_queue.put("Downloading started.")
-            command = ["yt-dlp", "-f", id, url, "-o", output_path]
-            result = subprocess.run(command, capture_output=True, text=True)
-            loq_queue.put("command ran")
+            log_queue.put("Downloading started.")
+            logging.info("Downloading started.")
             
-            if result.returncode == 0:
-                loq_queue.put("[Success] Download completed successfully!")
-            else:
-                loq_queue.put(f"[Error] Error: {result.stderr}")
+            def progress_hook(d):
+                if d['status'] == 'downloading':
+                    progress = d['_percent_str']
+                    total_bytes = self.format_bytes(d.get('total_bytes', 0))
+                    downloaded_bytes = self.format_bytes(d.get('downloaded_bytes', 0))
+                    speed = self.format_speed(d.get('speed', 0))
+                    
+                    try:
+                        eta = self.format_time(d.get('eta', 0))
+                    except:
+                        eta = "calculating..."
+                    
+                    log_message = (f"Download progress: {progress} "
+                                f"({downloaded_bytes}/{total_bytes}) "
+                                f"at {speed}, ETA: {eta}")
+                    log_queue.put(log_message)
+                    logging.info(log_message)
+                elif d['status'] == 'finished':
+                    log_queue.put("Download finished.")
+                    logging.info("Download finished.")
+                elif d['status'] == 'error':
+                    log_queue.put(f"Download error: {d['error']}")
+                    logging.error(f"Download error: {d['error']}")
+
+                
+            ydl_opts = {
+            'format': id,
+            'outtmpl': output_path,
+            'progress_hooks': [progress_hook],
+            }
+
+            with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+                try:
+                    ydl.download([url])
+                    log_queue.put("[Success] Download completed successfully!")
+                    logging.info("Download completed successfully!")
+                except Exception as e:
+                    log_queue.put(f"[Error] {str(e)}")
+                    logging.error(f"Error: {str(e)}")
         
         thread = threading.Thread(target=run)
         thread.start()
