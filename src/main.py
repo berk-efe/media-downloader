@@ -29,6 +29,7 @@ class App(CTk):
         self.grid_rowconfigure(2, weight=0)
         
         # CREATE INPUT FRAME
+        
         self.input_frame = CTkFrame(self)
         self.input_frame.grid(row=0, column=1, sticky="ew", padx=10, pady=10)
 
