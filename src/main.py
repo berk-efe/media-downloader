@@ -6,6 +6,7 @@ import pprint
 import queue
 
 from helper import YoutubeManager
+from helper import MAIN_QUEUE
 
 set_appearance_mode("System")
 set_default_color_theme("blue")
@@ -63,7 +64,7 @@ class App(CTk):
         self.status_label.grid(row=0, column=0, sticky="ew")
         
         # QUEUE FOR LOG MESSAGES
-        self.log_queue = queue.Queue()
+        self.log_queue = MAIN_QUEUE
         self.after(100, self.process_log_queue)
         
     # FUNCTIONS
@@ -77,7 +78,7 @@ class App(CTk):
     # GET VIDEO
     def get_video(self):
         url = self.url_entry.get()
-        ym.get_data_by_url(url, self.on_data_extraction, self.log_queue)
+        ym.get_data_by_url(url, self.on_data_extraction)
         
     # DOWNLOAD VIDEO
     def download_video(self):
