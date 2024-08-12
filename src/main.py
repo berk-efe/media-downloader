@@ -92,7 +92,7 @@ class App(CTk):
         video_id = desired_format.split(",")[-1].strip()
         output_path = tkinter.filedialog.asksaveasfilename(initialfile=video_title, defaultextension=f".{extension}", filetypes=[("MP4 Files", "*.mp4"), ("WEBP Files", "*.webp"), ("WEBM Files", "*.webm")])
         
-        ym.download_video_by_id(video_id, video_url, output_path, self.log_queue)
+        ym.download_video_by_id(video_id, video_url, output_path)
         
         
     # CALLBACK
@@ -103,6 +103,7 @@ class App(CTk):
         # LABLE
         self.video_title_lable = CTkTextbox(self.output_frame, height=1)
         self.video_title_lable.insert(tkinter.END, text=data.get('title', 'No Title'))
+        self.video_title_lable.configure(state="disabled")
         self.video_title_lable.grid(row=0, column=0, sticky="ew", padx=10, pady=10)
         
         # FORMAT_FRAME
@@ -128,14 +129,15 @@ class App(CTk):
         self.video_download_progress_bar.grid(row=2, column=0, sticky="ew", padx=10, pady=10)
         
         return data
-    
+
+"""     
     def on_video_download(self):
         
         # DOWNLOAD PROGRESS BAR
         test_var = tkinter.Variable(value=0.1)
         self.video_download_progress_bar = CTkProgressBar(self.output_frame, variable=test_var)
         self.video_download_progress_bar.grid(row=2, column=0, sticky="ew", padx=10, pady=10)
-        
+"""
 
 
 
