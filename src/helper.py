@@ -31,6 +31,7 @@ class YoutubeManager:
     def __init__(self):
         self.ydl_options = {
             "quiet": True,
+            "ffmpeg_location": "tools/bin/ffmpeg.exe",
             "postprocessors": [{
                 "key": "FFmpegVideoConvertor",
                 "preferedformat": "mp4",

@@ -40,7 +40,7 @@ class App(CTk):
 
         # INPUT FRAME WIDGETS
         self.url_entry = CTkEntry(self.input_frame)
-        self.url_entry.insert(0, 'https://www.youtube.com/watch?v=434pz9XIf_U')
+        self.url_entry.insert(0, 'https://www.youtube.com/watch?v=dQw4w9WgXcQ')
         self.url_entry.grid(row=0, column=0, sticky="ew", padx=10, pady=10)
         
         self.button = CTkButton(self.input_frame, text="Get Video", command=self.get_video)

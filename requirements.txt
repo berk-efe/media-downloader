@@ -7,11 +7,8 @@ idna==3.7
 modeltranslation==0.25
 mutagen==1.47.0
 packaging==24.1
-pillow==10.4.0
 pycryptodomex==3.20.0
-python-tkdnd==0.2.1
 requests==2.32.3
-ttkwidgets==0.13.0
 urllib3==2.2.2
 websockets==12.0
-yt-dlp==2024.7.25
+yt-dlp==2024.8.6
