@@ -83,16 +83,16 @@ class App(CTk):
     # DOWNLOAD VIDEO
     def download_video(self):
         self.video_download_button.configure(state="disabled")
-        desired_format = self.video_formats_combobox.get()
-        extension = desired_format.split(",")[1].strip()
+        
+        desired_resolution = self.video_formats_combobox.get()
         video_title = self.video_title_lable.get("1.0", tkinter.END).strip()
         
         video_url = self.url_entry.get()
         
-        video_id = desired_format.split(",")[-1].strip()
-        output_path = tkinter.filedialog.asksaveasfilename(initialfile=video_title, defaultextension=f".{extension}", filetypes=[("MP4 Files", "*.mp4"), ("WEBP Files", "*.webp"), ("WEBM Files", "*.webm")])
+        video_res = desired_resolution.split(",")[-1].strip()
+        output_path = tkinter.filedialog.asksaveasfilename(initialfile=video_title, filetypes=[("MP4 Files", "*.mp4"), ("WEBM Files", "*.webm")])
         
-        ym.download_video_by_id(video_id, video_url, output_path)
+        ym.download_video(video_res, video_url, output_path)
         
         
     # CALLBACK
@@ -115,7 +115,7 @@ class App(CTk):
         self.select_video_format_frame.grid_rowconfigure(0, weight=1)
         
         # FORMAT_FRAME WIDGETS
-        values = [f"{format.get('resolution')}, {format.get('ext')}, {format.get('fps')}fps, {format.get('id')}" for format in data.get('formats', [])]
+        values = [f"{res}" for res in data.get('resolutions', [])]
         self.video_formats_combobox = CTkComboBox(self.select_video_format_frame, values=values, state="readonly")
         self.video_formats_combobox.grid(row=0, column=0, sticky="ew", padx=10, pady=10)
         self.video_formats_combobox.set(values[-1])

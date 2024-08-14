@@ -33,6 +33,7 @@ class YoutubeManager:
             "quiet": True,
             "postprocessors": [{
                 "key": "FFmpegVideoConvertor",
+                "preferedformat": "mp4",
                 }],
             "logger": DEBUG_LOGGER,
             "progress_hooks": [my_hook],
@@ -76,30 +77,22 @@ class YoutubeManager:
                         thumbnail = thumbnail.get("url", None)
                         break
                 
-                formats = []
+                resolutions = []
                 for format in data["formats"]:
-                    if format.get('ext') != 'mp4' or format.get('fps') == None:
+                    if not format.get('ext') in ['mp4', 'webm'] or format.get('fps') == None or format.get('resolution') == None:
                         continue
                     
-                    simplyfied_format = {
-                        'ext': format.get('ext', None),
-                        'fps': format.get('fps', None),
-                        'resolution': format.get('resolution', None), 
-                        'id': format.get('format_id', None),             
-                    }
-                    formats.append(simplyfied_format)
+                    res = format.get('resolution').split("x")[-1] + "p"
+                    if  res in resolutions:
+                        continue
                     
-                for f in formats:
-                    if f.get('ext') == "mp4":
-                        for f2 in formats:
-                            if f.get('resolution') == f2.get('resolution') and f.get('fps') == f2.get('fps'):
-                                formats.remove(f2)
-                                break
+                    resolutions.append(res)
+                    
                 
                 result = {
                     "title": title,
                     "thumbnail": thumbnail,
-                    "formats": formats,
+                    "resolutions": resolutions,
                 }
                 
                 callback(result)
@@ -110,11 +103,13 @@ class YoutubeManager:
         thread.start()
         
     # DOWNLOAD VIDEO BY ID
-    def download_video_by_id(self, id, url, output_path):
+    def download_video(self, res, url, output_path):
         def run():
-                
+            MAIN_QUEUE.put("Downloading video...")
+            print("DEBUG", res[:-1])
+            
             ydl_opts = self.ydl_options.copy()
-            ydl_opts["format"] = id
+            ydl_opts["format"] = f"bestvideo[height={res[:-1]}]+bestaudio/best[height={res[:-1]}]"
             ydl_opts["outtmpl"] = output_path
 
             with yt_dlp.YoutubeDL(ydl_opts) as ydl:
