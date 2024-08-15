@@ -23,16 +23,15 @@ class App(CTk):
         self.geometry(f"{1000}x{720}")
         
         # CONFIGURE GRID
-        self.grid_columnconfigure(0, weight=0)
+        self.grid_columnconfigure(0, weight=1)
         self.grid_columnconfigure(1, weight=1)
         self.grid_rowconfigure(0, weight=0)
         self.grid_rowconfigure(1, weight=1)
         self.grid_rowconfigure(2, weight=0)
         
         # CREATE INPUT FRAME
-        
         self.input_frame = CTkFrame(self)
-        self.input_frame.grid(row=0, column=1, sticky="ew", padx=10, pady=10)
+        self.input_frame.grid(row=0, column=0, sticky="ew", padx=10, pady=10)
 
         self.input_frame.grid_columnconfigure(0, weight=1)
         self.input_frame.grid_columnconfigure(1, weight=0)
@@ -46,14 +45,19 @@ class App(CTk):
         self.button = CTkButton(self.input_frame, text="Get Video", command=self.get_video)
         self.button.grid(row=0, column=1, sticky="ew", padx=10, pady=10)
         
+        # PROGRESSBAR LIST
+        self.progressbar_list = CTkScrollableFrame(self, width=400)
+        self.progressbar_list.grid(row=0, column=1, sticky="nsew", rowspan=2, padx=10, pady=10)
+        
+        self.progressbar_list.grid_columnconfigure(0, weight=1)
+        
         # OUTPUT FRAME
         self.output_frame = CTkFrame(self)
-        self.output_frame.grid(row=1, column=1, sticky="nsew", padx=10, pady=10)
+        self.output_frame.grid(row=1, column=0, sticky="nsew", padx=10, pady=10)
         
         self.output_frame.grid_columnconfigure(0, weight=1)
         self.output_frame.grid_rowconfigure(0, weight=1)
         self.output_frame.grid_rowconfigure(1, weight=0)
-        self.output_frame.grid_rowconfigure(2, weight=0)
         
         # STATUS BAR
         self.status_bar_frame = CTkFrame(self, corner_radius=0)
@@ -73,6 +77,10 @@ class App(CTk):
         while not self.log_queue.empty():
             log_message = self.log_queue.get()
             self.status_label.configure(text=log_message)
+            
+            # CUSTOM HANDLER:  [download]  64.1% of ~  85.01MiB at    2.16MiB/s ETA 00:15 (frag 24/39)
+            
+            
         self.after(100, self.process_log_queue)
     
     # GET VIDEO
@@ -92,9 +100,22 @@ class App(CTk):
         video_res = desired_resolution.split(",")[-1].strip()
         output_path = tkinter.filedialog.asksaveasfilename(initialfile=video_title, filetypes=[("MP4 Files", "*.mp4"), ("WEBM Files", "*.webm")])
         
-        ym.download_video(video_res, video_url, output_path)
+        ym.download_video(video_res, video_url, output_path, )
         
+
+    def on_video_download_finished(self):
         
+        title = self.video_title_lable.get("1.0", tkinter.END).strip()
+        
+        # DOWNLOAD PROGRESS BAR
+        test_var = tkinter.Variable(value=0.1)
+        self.video_download_progress_bar = CTkProgressBar(self.progressbar_list, variable=test_var)
+        self.video_download_progress_bar.pack(fill="x", expand=True, padx=10, pady=0)
+        
+        self.video_label = CTkLabel(self.progressbar_list, text=title, anchor=tkinter.W)
+        self.video_label.pack(fill="x", expand=True, padx=10, pady=10)
+        
+
     # CALLBACK
     def on_data_extraction(self, data):
         for widget in self.output_frame.winfo_children():
@@ -122,11 +143,6 @@ class App(CTk):
 
         self.video_download_button = CTkButton(self.select_video_format_frame, text="Download", command=self.download_video)
         self.video_download_button.grid(row=0, column=1, sticky="ew", padx=10, pady=10)
-        
-        # DOWNLOAD PROGRESS BAR
-        test_var = tkinter.Variable(value=0.1)
-        self.video_download_progress_bar = CTkProgressBar(self.output_frame, variable=test_var)
-        self.video_download_progress_bar.grid(row=2, column=0, sticky="ew", padx=10, pady=10)
         
         return data
 

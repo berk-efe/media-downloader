@@ -117,7 +117,7 @@ class YoutubeManager:
                 ydl.download([url])
                 MAIN_QUEUE.put("[Success] Download completed successfully!")
             
-                     
+
         
         thread = threading.Thread(target=run)
         thread.start()
