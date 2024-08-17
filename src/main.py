@@ -3,10 +3,9 @@ import tkinter.filedialog
 import tkinter.messagebox
 from customtkinter import *
 import pprint
-import queue
 
 from helper import YoutubeManager
-from helper import MAIN_QUEUE
+from helper import MAIN_QUEUE, VAR_LIST
 
 set_appearance_mode("System")
 set_default_color_theme("blue")
@@ -69,19 +68,27 @@ class App(CTk):
         
         # QUEUE FOR LOG MESSAGES
         self.log_queue = MAIN_QUEUE
-        self.after(100, self.process_log_queue)
+        self.var_list = VAR_LIST
+        self.after(50, self.process_log_queue)
         
     # FUNCTIONS
+    
     # periodically checks the queue for new log messages and updates the status bar.
-    def process_log_queue(self):
-        while not self.log_queue.empty():
+    def process_log_queue(self):        
+        while not self.log_queue.empty():            
             log_message = self.log_queue.get()
             self.status_label.configure(text=log_message)
             
             # CUSTOM HANDLER:  [download]  64.1% of ~  85.01MiB at    2.16MiB/s ETA 00:15 (frag 24/39)
             
+        while self.var_list:
+            for var, queue in self.var_list:
+                if not queue.empty():
+                    log_message = queue.get()
+                    var.set(log_message)
+                    print("LOG MESSAGE: ", var.get())
             
-        self.after(100, self.process_log_queue)
+        self.after(50, self.process_log_queue)
     
     # GET VIDEO
     def get_video(self):
@@ -100,12 +107,13 @@ class App(CTk):
         video_res = desired_resolution.split(",")[-1].strip()
         output_path = tkinter.filedialog.asksaveasfilename(initialfile=video_title, filetypes=[("MP4 Files", "*.mp4"), ("WEBM Files", "*.webm")])
         
-        ym.download_video(video_res, video_url, output_path, )
-        
+        ym.download_video(video_res, video_url, output_path)
+
 
     def on_video_download_finished(self):
         
         title = self.video_title_lable.get("1.0", tkinter.END).strip()
+        
         
         # DOWNLOAD PROGRESS BAR
         test_var = tkinter.Variable(value=0.1)
@@ -114,6 +122,7 @@ class App(CTk):
         
         self.video_label = CTkLabel(self.progressbar_list, text=title, anchor=tkinter.W)
         self.video_label.pack(fill="x", expand=True, padx=10, pady=10)
+        
         
 
     # CALLBACK

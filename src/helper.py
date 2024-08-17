@@ -1,13 +1,15 @@
 import logging
-import threading
 import yt_dlp
-import queue
 
+from tkinter import Variable
 from datetime import timedelta
-
 from logging import Logger
 
-MAIN_QUEUE = queue.Queue()
+from multiprocessing import Queue, Process
+from threading import Thread
+
+MAIN_QUEUE = Queue()
+VAR_LIST = []
 
 class MyHandler(logging.Handler):
     def __init__(self, level=logging.DEBUG) -> None:
@@ -18,11 +20,22 @@ class MyHandler(logging.Handler):
         log_entry = self.format(record) # for now it just returns the record in string format
         MAIN_QUEUE.put(log_entry)
         print("CUSTOM HANDLER: ", log_entry)
+        
+class VideoProgressHandler(logging.Handler):
+    def __init__(self, queue, level=logging.DEBUG) -> None:
+        self.queue = queue
+        super().__init__(level)
+        
+    def emit(self, record: logging.LogRecord) -> None:
+        
+        log_entry = self.format(record)
+        self.queue.put(log_entry)
 
 DEBUG_LOGGER = Logger(name="debug_logger", level=logging.DEBUG)
 DEBUG_LOGGER.addHandler(MyHandler())
 
 
+# CHANGE IT
 def my_hook(d):
     if d['status'] == 'finished':
         print('Done downloading, now post-processing ...')
@@ -100,28 +113,33 @@ class YoutubeManager:
                 
                 MAIN_QUEUE.put("Data extracted successfully.")
         
-        thread = threading.Thread(target=run)
+        thread = Thread(target=run)
         thread.start()
         
     # DOWNLOAD VIDEO BY ID
     def download_video(self, res, url, output_path):
-        def run():
-            MAIN_QUEUE.put("Downloading video...")
-            print("DEBUG", res[:-1])
+        def run(self, res, url, output_path, var_list):
+            progress_queue = Queue()
+            
+            progress_logger = Logger(name="progress_logger", level=logging.DEBUG)
+            progress_logger.addHandler(VideoProgressHandler(progress_queue))
+            
+            progress_var = Variable(value=0)
+
+            var_list.append([progress_var, progress_queue])
             
             ydl_opts = self.ydl_options.copy()
             ydl_opts["format"] = f"bestvideo[height={res[:-1]}]+bestaudio/best[height={res[:-1]}]"
+            ydl_opts["logger"] = progress_logger
             ydl_opts["outtmpl"] = output_path
 
             with yt_dlp.YoutubeDL(ydl_opts) as ydl:
                 ydl.download([url])
-                MAIN_QUEUE.put("[Success] Download completed successfully!")
-            
-
+                progress_queue.put("[Success] Download completed successfully!")
         
-        thread = threading.Thread(target=run)
-        thread.start()
-
+        process = Process(target=run, args=(self, res, url, output_path, VAR_LIST))
+        process.start()
+        
 
 if __name__ != "__main__":
     pass
