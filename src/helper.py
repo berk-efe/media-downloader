@@ -5,8 +5,10 @@ from tkinter import Variable
 from datetime import timedelta
 from logging import Logger
 
-from multiprocessing import Queue, Process
+from multiprocess import Process
 from threading import Thread
+
+from queue import Queue
 
 MAIN_QUEUE = Queue()
 VAR_LIST = []
@@ -23,9 +25,8 @@ class MyHandler(logging.Handler):
         
 class VideoProgressHandler(logging.Handler):
     def __init__(self, queue, level=logging.DEBUG) -> None:
-        self.queue = queue
         super().__init__(level)
-        
+        self.queue = queue
     def emit(self, record: logging.LogRecord) -> None:
         
         log_entry = self.format(record)
@@ -117,17 +118,17 @@ class YoutubeManager:
         thread.start()
         
     # DOWNLOAD VIDEO BY ID
-    def download_video(self, res, url, output_path):
-        def run(self, res, url, output_path, var_list):
-            progress_queue = Queue()
-            
-            progress_logger = Logger(name="progress_logger", level=logging.DEBUG)
-            progress_logger.addHandler(VideoProgressHandler(progress_queue))
-            
-            progress_var = Variable(value=0)
+    def download_video(self, res, url, output_path, callback):
+        progress_queue = Queue()
+        
+        progress_logger = Logger(name="progress_logger", level=logging.DEBUG)
+        progress_logger.addHandler(VideoProgressHandler(progress_queue))
+        
+        progress_var = Variable(value=0)
 
-            var_list.append([progress_var, progress_queue])
+        VAR_LIST.append([progress_var, progress_queue])
             
+        def run():
             ydl_opts = self.ydl_options.copy()
             ydl_opts["format"] = f"bestvideo[height={res[:-1]}]+bestaudio/best[height={res[:-1]}]"
             ydl_opts["logger"] = progress_logger
@@ -137,9 +138,10 @@ class YoutubeManager:
                 ydl.download([url])
                 progress_queue.put("[Success] Download completed successfully!")
         
-        process = Process(target=run, args=(self, res, url, output_path, VAR_LIST))
+        process = Thread(target=run)
         process.start()
         
+        callback(progress_var)
 
 if __name__ != "__main__":
     pass

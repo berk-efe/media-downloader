@@ -2,10 +2,12 @@ import tkinter
 import tkinter.filedialog
 import tkinter.messagebox
 from customtkinter import *
-import pprint
+import regex
 
 from helper import YoutubeManager
 from helper import MAIN_QUEUE, VAR_LIST
+
+TEST_URL = "https://www.youtube.com/watch?v=434pz9XIf_U"
 
 set_appearance_mode("System")
 set_default_color_theme("blue")
@@ -38,7 +40,7 @@ class App(CTk):
 
         # INPUT FRAME WIDGETS
         self.url_entry = CTkEntry(self.input_frame)
-        self.url_entry.insert(0, 'https://www.youtube.com/watch?v=dQw4w9WgXcQ')
+        self.url_entry.insert(0, TEST_URL)
         self.url_entry.grid(row=0, column=0, sticky="ew", padx=10, pady=10)
         
         self.button = CTkButton(self.input_frame, text="Get Video", command=self.get_video)
@@ -81,14 +83,20 @@ class App(CTk):
             
             # CUSTOM HANDLER:  [download]  64.1% of ~  85.01MiB at    2.16MiB/s ETA 00:15 (frag 24/39)
             
-        while self.var_list:
-            for var, queue in self.var_list:
-                if not queue.empty():
-                    log_message = queue.get()
-                    var.set(log_message)
-                    print("LOG MESSAGE: ", var.get())
+        for var, queue in self.var_list:
+            if not queue.empty():
+                log_message = queue.get().strip()
+                
+                # [download]  28.3% of    3.23MiB at  552.30KiB/s ETA 00:04 (frag 4/18)
+                pattern = r"\[download\] *\d+.\d+% of *\d+.\d+MiB at"
+                print(log_message)
+                if log_message.startswith("[download]"):
+                    download_percentage = str(log_message).split(" ")[1][:-1]
+                    print("LOG MESSAGE: ", download_percentage)
+                # var.set(download_percentage)
+                
             
-        self.after(50, self.process_log_queue)
+        self.after(100, self.process_log_queue)
     
     # GET VIDEO
     def get_video(self):
@@ -107,22 +115,23 @@ class App(CTk):
         video_res = desired_resolution.split(",")[-1].strip()
         output_path = tkinter.filedialog.asksaveasfilename(initialfile=video_title, filetypes=[("MP4 Files", "*.mp4"), ("WEBM Files", "*.webm")])
         
-        ym.download_video(video_res, video_url, output_path)
+        if output_path == "":
+            self.video_download_button.configure(state="normal")
+            return
+        
+        ym.download_video(video_res, video_url, output_path, self.on_video_download_finished)
 
 
-    def on_video_download_finished(self):
+    def on_video_download_finished(self, var):
         
         title = self.video_title_lable.get("1.0", tkinter.END).strip()
         
-        
         # DOWNLOAD PROGRESS BAR
-        test_var = tkinter.Variable(value=0.1)
-        self.video_download_progress_bar = CTkProgressBar(self.progressbar_list, variable=test_var)
+        self.video_download_progress_bar = CTkProgressBar(self.progressbar_list, variable=var)
         self.video_download_progress_bar.pack(fill="x", expand=True, padx=10, pady=0)
         
         self.video_label = CTkLabel(self.progressbar_list, text=title, anchor=tkinter.W)
         self.video_label.pack(fill="x", expand=True, padx=10, pady=10)
-        
         
 
     # CALLBACK
