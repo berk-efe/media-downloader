@@ -2,7 +2,7 @@ import tkinter
 import tkinter.filedialog
 import tkinter.messagebox
 from customtkinter import *
-import regex
+import re
 
 from helper import YoutubeManager
 from helper import MAIN_QUEUE, VAR_LIST
@@ -75,25 +75,30 @@ class App(CTk):
         
     # FUNCTIONS
     
+    def strip_ansi_codes(self, text):
+        ansi_escape = re.compile(r'\x1B[@-_][0-?]*[ -/]*[@-~]')
+        return ansi_escape.sub('', text)
+    
     # periodically checks the queue for new log messages and updates the status bar.
     def process_log_queue(self):        
         while not self.log_queue.empty():            
             log_message = self.log_queue.get()
             self.status_label.configure(text=log_message)
             
-            # CUSTOM HANDLER:  [download]  64.1% of ~  85.01MiB at    2.16MiB/s ETA 00:15 (frag 24/39)
             
         for var, queue in self.var_list:
             if not queue.empty():
-                log_message = queue.get().strip()
+                log_message = queue.get()
+                clean_message = self.strip_ansi_codes(log_message)
                 
-                # [download]  28.3% of    3.23MiB at  552.30KiB/s ETA 00:04 (frag 4/18)
-                pattern = r"\[download\] *\d+.\d+% of *\d+.\d+MiB at"
-                print(log_message)
-                if log_message.startswith("[download]"):
-                    download_percentage = str(log_message).split(" ")[1][:-1]
-                    print("LOG MESSAGE: ", download_percentage)
-                # var.set(download_percentage)
+                # [download]  28.3% of   3.23MiB at  552.30KiB/s ETA 00:04
+                pattern = r"\[download\]\s*\d+\.\d+% of"
+                if re.search(pattern, clean_message):
+                    download_percentage = re.search(r"\d+\.\d+%", clean_message).group()
+                    download_percentage = float(download_percentage.replace("%", "")) / 100
+                    var.set(download_percentage)
+                
+                print("LOG MESSAGE: ", clean_message)
                 
             
         self.after(100, self.process_log_queue)
