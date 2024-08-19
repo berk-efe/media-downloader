@@ -112,13 +112,14 @@ class YoutubeManager:
                 
                 callback(result)
                 
-                MAIN_QUEUE.put("Data extracted successfully.")
+                MAIN_QUEUE.put(f"Succesfly extracted data for {title}")
         
         thread = Thread(target=run)
         thread.start()
         
     # DOWNLOAD VIDEO BY ID
     def download_video(self, res, url, output_path, callback):
+        MAIN_QUEUE.put("[info] Downloading started...")
         progress_queue = Queue()
         
         progress_logger = Logger(name="progress_logger", level=logging.DEBUG)
@@ -135,8 +136,8 @@ class YoutubeManager:
             ydl_opts["outtmpl"] = output_path
 
             with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-                ydl.download([url])
-                progress_queue.put("[Success] Download completed successfully!")
+                video_title = ydl.extract_info(url, download=True).get("title", None)
+                progress_queue.put(f"[success] Download completed successfully for {video_title}")
         
         process = Thread(target=run)
         process.start()

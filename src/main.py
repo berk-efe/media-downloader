@@ -7,7 +7,11 @@ import re
 from helper import YoutubeManager
 from helper import MAIN_QUEUE, VAR_LIST
 
-TEST_URL = "https://www.youtube.com/watch?v=434pz9XIf_U"
+LIST_OF_TEST_URLS = [
+    "https://www.youtube.com/watch?v=434pz9XIf_U",
+    "https://www.youtube.com/watch?v=EG2lE3WTBCY"
+]
+
 
 set_appearance_mode("System")
 set_default_color_theme("blue")
@@ -40,11 +44,11 @@ class App(CTk):
 
         # INPUT FRAME WIDGETS
         self.url_entry = CTkEntry(self.input_frame)
-        self.url_entry.insert(0, TEST_URL)
+        self.url_entry.insert(0, LIST_OF_TEST_URLS[0])
         self.url_entry.grid(row=0, column=0, sticky="ew", padx=10, pady=10)
         
-        self.button = CTkButton(self.input_frame, text="Get Video", command=self.get_video)
-        self.button.grid(row=0, column=1, sticky="ew", padx=10, pady=10)
+        self.get_video_btn = CTkButton(self.input_frame, text="Get Video", command=self.get_video)
+        self.get_video_btn.grid(row=0, column=1, sticky="ew", padx=10, pady=10)
         
         # PROGRESSBAR LIST
         self.progressbar_list = CTkScrollableFrame(self, width=400)
@@ -88,8 +92,12 @@ class App(CTk):
             
         for var, queue in self.var_list:
             if not queue.empty():
+                
                 log_message = queue.get()
                 clean_message = self.strip_ansi_codes(log_message)
+                
+                if log_message.startswith(("[success]", "[info]")):
+                    self.status_label.configure(text=log_message)
                 
                 # [download]  28.3% of   3.23MiB at  552.30KiB/s ETA 00:04
                 pattern = r"\[download\]\s*\d+\.\d+% of"
@@ -105,6 +113,10 @@ class App(CTk):
     
     # GET VIDEO
     def get_video(self):
+        
+        self.get_video_btn.configure(state="disabled")
+        print("BUTTON DISABLED")
+        
         url = self.url_entry.get()
         ym.get_data_by_url(url, self.on_data_extraction)
         
@@ -125,6 +137,7 @@ class App(CTk):
             return
         
         ym.download_video(video_res, video_url, output_path, self.on_video_download_finished)
+        self.video_download_button.configure(state="normal")
 
 
     def on_video_download_finished(self, var):
@@ -141,6 +154,8 @@ class App(CTk):
 
     # CALLBACK
     def on_data_extraction(self, data):
+        
+        
         for widget in self.output_frame.winfo_children():
             widget.destroy()
         
@@ -167,6 +182,8 @@ class App(CTk):
         self.video_download_button = CTkButton(self.select_video_format_frame, text="Download", command=self.download_video)
         self.video_download_button.grid(row=0, column=1, sticky="ew", padx=10, pady=10)
         
+        self.get_video_btn.configure(state="normal")
+        print("BUTTON ENABLED")
         return data
 
 """     
