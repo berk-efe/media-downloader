@@ -69,7 +69,7 @@ class App(CTk):
         self.status_bar_frame.grid(row=2, column=0, sticky="ew", columnspan=2)
         
         # STATUS BAR WIDGETS
-        self.status_label = CTkLabel(self.status_bar_frame, text="Ready", anchor=tkinter.W)
+        self.status_label = CTkLabel(self.status_bar_frame, text="Ready", anchor=tkinter.W, font=("Arial", 10))
         self.status_label.grid(row=0, column=0, sticky="ew")
         
         # QUEUE FOR LOG MESSAGES
