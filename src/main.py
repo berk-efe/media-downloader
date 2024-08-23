@@ -143,13 +143,22 @@ class App(CTk):
     def on_video_download_finished(self, var):
         
         title = self.video_title_lable.get("1.0", tkinter.END).strip()
+        title = ym.strip_extra_letters(title, 16)
+        
+        self.video_download_progress = CTkFrame(self.progressbar_list)
+        self.video_download_progress.grid_columnconfigure(0, weight=1)
+        self.video_download_progress.grid_columnconfigure(1, weight=0)
+        
+        self.video_download_progress.grid_rowconfigure(0)
+        self.video_download_progress.grid_rowconfigure(1)
+        
         
         # DOWNLOAD PROGRESS BAR
-        self.video_download_progress_bar = CTkProgressBar(self.progressbar_list, variable=var)
-        self.video_download_progress_bar.pack(fill="x", expand=True, padx=10, pady=0)
+        self.video_download_progress_bar = CTkProgressBar(self.video_download_progress, variable=var)
+        self.video_download_progress_bar.grid(row=0, column=0, sticky="ew")
         
-        self.video_label = CTkLabel(self.progressbar_list, text=title, anchor=tkinter.W)
-        self.video_label.pack(fill="x", expand=True, padx=10, pady=10)
+        self.video_label = CTkLabel(self.video_download_progress, text=title, anchor=tkinter.W)
+        self.video_label.grid(row=1, column=0, sticky="ew")
         
 
     # CALLBACK

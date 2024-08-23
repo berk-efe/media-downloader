@@ -54,6 +54,20 @@ class YoutubeManager:
             "progress_hooks": [my_hook],
         }
 
+    # SIMPLE HELP STUFF GONNA CHANGE THE LOCATION
+    
+    def strip_extra_letters(self, text, lenght):
+        count = 0
+        result = []
+        for letter in text:
+            if count < lenght:
+                result.append(letter)
+                count += 1
+                continue
+            else:
+                result.append("...")
+            
+        return "".join(result)
 
     def format_bytes(self, bytes):
         if bytes >= 1024*1024:  # 1 MB
