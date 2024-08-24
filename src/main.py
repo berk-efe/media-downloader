@@ -93,35 +93,41 @@ class App(CTk):
         for progress_data, queue in self.var_list:
             if not queue.empty():
                 
-                log_message = queue.get()
-                clean_message = self.strip_ansi_codes(log_message).strip()
                 
-                if log_message.startswith(("[success]", "[info]")):
+                log_message = queue.get()
+                clean_message = self.strip_ansi_codes(log_message)
+                
+                data = ""
+                
+                print("LOG MESSAGE: ", clean_message)
+                
+                if clean_message.startswith(("[success]", "[info]")):
                     self.status_label.configure(text=log_message)
                 
+                if clean_message.startswith(("[youtube]", "[info]")):
+                    data = "Processing.."
+                elif clean_message == "Done downloading, now post-processing":
+                    data = "Post-processing.."
+                elif clean_message.startswith("[Merger]"):
+                    data = "Merging.."
+                elif clean_message.startswith("[VideoConvertor]"):
+                    data = "Converting.."
+                elif clean_message.startswith("[success]"):
+                    data = "Done"
+                    
+                    
                 # [download]  28.3% of   3.23MiB at  552.30KiB/s ETA 00:04
+                    
                 pattern = r"\[download\]\s*\d+\.\d+% of"
                 if re.search(pattern, clean_message):
                     data = clean_message.split("] ")[1]
-                    if clean_message.startswith(("[youtube]", "[info]")):
-                        data = "Processing.."
-                    elif clean_message == "Done downloading, now post-processing":
-                        data = "Post-processing.."
-                    elif clean_message.startswith("[Merger]"):
-                        data = "Merging.."
-                    elif clean_message.startswith("[VideoConvertor]"):
-                        data = "Converting.."
-                    elif clean_message.startswith("[success]"):
-                        data = "Done"
-                    progress_data["data_var"].set(data)
                     
                     download_percentage = re.search(r"\d+\.\d+%", clean_message).group()
                     download_percentage = float(download_percentage.replace("%", "")) / 100
                     progress_data["progress_var"].set(download_percentage)
-                else:
                 
-                    print("LOG MESSAGE: ", clean_message)
-                
+                if data != "":
+                    progress_data["data_var"].set(data)
             
         self.after(100, self.process_log_queue)
     
