@@ -51,7 +51,7 @@ class App(CTk):
         self.get_video_btn.grid(row=0, column=1, sticky="ew", padx=10, pady=10)
         
         # PROGRESSBAR LIST
-        self.progressbar_list = CTkScrollableFrame(self, width=400)
+        self.progressbar_list = CTkScrollableFrame(self, width=300)
         self.progressbar_list.grid(row=0, column=1, sticky="nsew", rowspan=2, padx=10, pady=10)
         
         self.progressbar_list.grid_columnconfigure(0, weight=1)
@@ -90,11 +90,11 @@ class App(CTk):
             self.status_label.configure(text=log_message)
             
             
-        for var, queue in self.var_list:
+        for progress_data, queue in self.var_list:
             if not queue.empty():
                 
                 log_message = queue.get()
-                clean_message = self.strip_ansi_codes(log_message)
+                clean_message = self.strip_ansi_codes(log_message).strip()
                 
                 if log_message.startswith(("[success]", "[info]")):
                     self.status_label.configure(text=log_message)
@@ -102,11 +102,25 @@ class App(CTk):
                 # [download]  28.3% of   3.23MiB at  552.30KiB/s ETA 00:04
                 pattern = r"\[download\]\s*\d+\.\d+% of"
                 if re.search(pattern, clean_message):
+                    data = clean_message.split("] ")[1]
+                    if clean_message.startswith(("[youtube]", "[info]")):
+                        data = "Processing.."
+                    elif clean_message == "Done downloading, now post-processing":
+                        data = "Post-processing.."
+                    elif clean_message.startswith("[Merger]"):
+                        data = "Merging.."
+                    elif clean_message.startswith("[VideoConvertor]"):
+                        data = "Converting.."
+                    elif clean_message.startswith("[success]"):
+                        data = "Done"
+                    progress_data["data_var"].set(data)
+                    
                     download_percentage = re.search(r"\d+\.\d+%", clean_message).group()
                     download_percentage = float(download_percentage.replace("%", "")) / 100
-                    var.set(download_percentage)
+                    progress_data["progress_var"].set(download_percentage)
+                else:
                 
-                print("LOG MESSAGE: ", clean_message)
+                    print("LOG MESSAGE: ", clean_message)
                 
             
         self.after(100, self.process_log_queue)
@@ -140,14 +154,18 @@ class App(CTk):
         self.video_download_button.configure(state="normal")
 
 
-    def on_video_download_finished(self, var):
+    def on_video_download_finished(self, progress_data):
+        
+        var = progress_data["progress_var"] # Variable()
+        data = progress_data["data_var"] # StringVar()
         
         title = self.video_title_lable.get("1.0", tkinter.END).strip()
         title = ym.strip_extra_letters(title, 16)
         
         self.video_download_progress = CTkFrame(self.progressbar_list)
-        self.video_download_progress.grid_columnconfigure(0, weight=1)
-        self.video_download_progress.grid_columnconfigure(1, weight=0)
+        self.video_download_progress.grid(sticky="ew", padx=10, pady=10)
+        self.video_download_progress.grid_columnconfigure(0, weight=0)
+        self.video_download_progress.grid_columnconfigure(1, weight=1)
         
         self.video_download_progress.grid_rowconfigure(0)
         self.video_download_progress.grid_rowconfigure(1)
@@ -155,10 +173,13 @@ class App(CTk):
         
         # DOWNLOAD PROGRESS BAR
         self.video_download_progress_bar = CTkProgressBar(self.video_download_progress, variable=var)
-        self.video_download_progress_bar.grid(row=0, column=0, sticky="ew")
+        self.video_download_progress_bar.grid(row=0, column=0, columnspan=2, sticky="ew")
         
         self.video_label = CTkLabel(self.video_download_progress, text=title, anchor=tkinter.W)
         self.video_label.grid(row=1, column=0, sticky="ew")
+        
+        self.progress_data_label = CTkLabel(self.video_download_progress, textvariable=data, anchor=tkinter.W)
+        self.progress_data_label.grid(row=1, column=1, sticky="ew")
         
 
     # CALLBACK

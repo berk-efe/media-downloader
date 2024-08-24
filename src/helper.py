@@ -1,7 +1,7 @@
 import logging
 import yt_dlp
 
-from tkinter import Variable
+from tkinter import Variable, StringVar
 from datetime import timedelta
 from logging import Logger
 
@@ -66,8 +66,7 @@ class YoutubeManager:
                 continue
             else:
                 result.append("...")
-            
-        return "".join(result)
+                return "".join(result)
 
     def format_bytes(self, bytes):
         if bytes >= 1024*1024:  # 1 MB
@@ -139,9 +138,13 @@ class YoutubeManager:
         progress_logger = Logger(name="progress_logger", level=logging.DEBUG)
         progress_logger.addHandler(VideoProgressHandler(progress_queue))
         
-        progress_var = Variable(value=0)
+        
+        progress_data = {
+            "progress_var": Variable(value=0),
+            "data_var": StringVar(value=""),
+        }
 
-        VAR_LIST.append([progress_var, progress_queue])
+        VAR_LIST.append([progress_data, progress_queue])
             
         def run():
             ydl_opts = self.ydl_options.copy()
@@ -156,7 +159,7 @@ class YoutubeManager:
         process = Thread(target=run)
         process.start()
         
-        callback(progress_var)
+        callback(progress_data)
 
 if __name__ != "__main__":
     pass
