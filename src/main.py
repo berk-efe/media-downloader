@@ -4,8 +4,10 @@ import tkinter.messagebox
 from customtkinter import *
 import re
 
-from helper import YoutubeManager
-from helper import MAIN_QUEUE, VAR_LIST
+from helper import strip_ansi_codes, strip_extra_letters, format_bytes, format_speed, format_time
+
+from youtube_helper import YoutubeManager
+from youtube_helper import MAIN_QUEUE, VAR_LIST
 
 LIST_OF_TEST_URLS = [
     "https://www.youtube.com/watch?v=434pz9XIf_U",
@@ -25,7 +27,7 @@ class App(CTk):
 
         # CONFIGURE WINDOW
         self.title("Media Downloader")
-        self.geometry(f"{1000}x{720}")
+        self.geometry(f"{1080}x{720}")
         
         # CONFIGURE GRID
         self.grid_columnconfigure(0, weight=1)
@@ -79,9 +81,7 @@ class App(CTk):
         
     # FUNCTIONS
     
-    def strip_ansi_codes(self, text):
-        ansi_escape = re.compile(r'\x1B[@-_][0-?]*[ -/]*[@-~]')
-        return ansi_escape.sub('', text)
+    
     
     # periodically checks the queue for new log messages and updates the status bar.
     def process_log_queue(self):        
@@ -95,7 +95,7 @@ class App(CTk):
                 
                 
                 log_message = queue.get()
-                clean_message = self.strip_ansi_codes(log_message)
+                clean_message = strip_ansi_codes(log_message)
                 
                 data = ""
                 
@@ -166,7 +166,7 @@ class App(CTk):
         data = progress_data["data_var"] # StringVar()
         
         title = self.video_title_lable.get("1.0", tkinter.END).strip()
-        title = ym.strip_extra_letters(title, 16)
+        title = strip_extra_letters(title, 16)
         
         self.video_download_progress = CTkFrame(self.progressbar_list)
         self.video_download_progress.grid(sticky="ew", padx=10, pady=10)
@@ -184,7 +184,7 @@ class App(CTk):
         self.video_label = CTkLabel(self.video_download_progress, text=title, anchor=tkinter.W)
         self.video_label.grid(row=1, column=0, sticky="ew")
         
-        self.progress_data_label = CTkLabel(self.video_download_progress, textvariable=data, anchor=tkinter.W)
+        self.progress_data_label = CTkLabel(self.video_download_progress, textvariable=data, anchor=tkinter.E)
         self.progress_data_label.grid(row=1, column=1, sticky="ew")
         
 
