@@ -9,4 +9,4 @@ This is a simple gui application powered by python for yt-dlp.
 - Unnecessary converting to mp4.
 
 
-Do not forget to star [yt-dlp](https://github.com/yt-dlp/yt-dlp)!
+Do not forget to star [yt-dlp](https://github.com/yt-dlp/yt-dlp) and [ffmpeg](https://github.com/FFmpeg/FFmpeg)!
