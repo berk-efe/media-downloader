@@ -82,16 +82,11 @@ class YouTubeDownloader(QWidget):
         with YoutubeDL(ydl_opts) as ydl:
             return ydl.extract_info(url, download=False)
 
-    def resource_path(self, relative_path):
-        base_path = getattr(sys, "_MEIPASS", os.path.dirname(os.path.abspath(__file__)))
-        return os.path.join(base_path, relative_path)
-
     def run_yt_dlp(self, url):
         ydl_opts = {
             "outtmpl": "%(title)s.%(ext)s",
             "format": "bestvideo+bestaudio/best",
             "merge_output_format": "mp4",
-            "ffmpeg_location": self.resource_path("ffmpeg/ffmpeg.exe"),
         }
         with YoutubeDL(ydl_opts) as ydl:
             ydl.download([url])
